@@ -127,6 +127,16 @@ docker compose build --no-cache
    - Check write permissions in the output directory
    - Ensure enough disk space is available
 
+4. "No such file or directory" for output path:
+   ```bash
+   # Create the output directory with proper permissions
+   sudo mkdir -p /path/to/output/directory
+   sudo chown -R $USER:$USER /path/to/output/directory
+   
+   # Or run the script with sudo if needed
+   sudo ./scripts/docker_segment.sh input.nii.gz output.nii.gz
+   ```
+
 ## License
 
 [Your License Information]

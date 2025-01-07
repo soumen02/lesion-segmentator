@@ -16,11 +16,16 @@ if [ ! -f "$1" ]; then
     exit 1
 fi
 
-# Check if output directory exists
+# Create full output directory path
 OUTPUT_DIR=$(dirname "$2")
-if [ ! -d "$OUTPUT_DIR" ]; then
-    echo "Creating output directory: $OUTPUT_DIR"
-    mkdir -p "$OUTPUT_DIR"
+echo "Creating output directory: $OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+
+# Check if we can write to the output directory
+if [ ! -w "$OUTPUT_DIR" ]; then
+    echo "Error: Cannot write to output directory: $OUTPUT_DIR"
+    echo "Try: sudo chown -R $USER:$USER $OUTPUT_DIR"
+    exit 1
 fi
 
 # Get absolute paths
@@ -33,6 +38,12 @@ INPUT_DIR=$(dirname "$INPUT_FILE")
 OUTPUT_DIR=$(dirname "$OUTPUT_FILE")
 INPUT_FILENAME=$(basename "$INPUT_FILE")
 OUTPUT_FILENAME=$(basename "$OUTPUT_FILE")
+
+# Print paths for debugging
+echo "Input path: $INPUT_FILE"
+echo "Output path: $OUTPUT_FILE"
+echo "Input directory: $INPUT_DIR"
+echo "Output directory: $OUTPUT_DIR"
 
 # Export for docker-compose
 export INPUT_DIR=$INPUT_DIR
@@ -61,6 +72,10 @@ docker compose down --remove-orphans > /dev/null 2>&1 || true
 # Check if output file was created
 if [ ! -f "$OUTPUT_FILE" ]; then
     echo "Error: Output file was not created"
+    echo "Please check:"
+    echo "1. Docker container has write permissions to: $OUTPUT_DIR"
+    echo "2. Enough disk space is available"
+    echo "3. The path exists inside the container at: /data/output/"
     exit 1
 else
     echo "Successfully created: $OUTPUT_FILE"
