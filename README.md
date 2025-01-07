@@ -5,7 +5,7 @@ A containerized tool for segmenting lesions in FLAIR MRI scans using a pre-train
 ## Prerequisites
 
 - Docker (>= 20.10.0)
-- NVIDIA Container Toolkit (for GPU support)
+- NVIDIA Container Toolkit (optional, for GPU support on Linux)
   ```bash
   # For Ubuntu
   curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
@@ -15,6 +15,11 @@ A containerized tool for segmenting lesions in FLAIR MRI scans using a pre-train
   sudo apt-get update
   sudo apt-get install -y nvidia-container-toolkit
   ```
+
+  ### System Compatibility
+  - Linux: Supports both GPU (with NVIDIA drivers) and CPU modes
+  - macOS: Supports CPU mode only (GPU mode will automatically fall back to CPU)
+  - Windows: Supports CPU mode only (GPU mode will automatically fall back to CPU)
 
 ## Installation
 
@@ -39,7 +44,14 @@ docker compose build
 ### Basic Usage
 
 ```bash
-./scripts/docker_segment.sh input_flair.nii.gz output_mask.nii.gz [gpu|cpu]
+# Auto-detect mode (recommended)
+./scripts/docker_segment.sh input.nii.gz output.nii.gz
+
+# Force CPU mode
+./scripts/docker_segment.sh input.nii.gz output.nii.gz cpu
+
+# Force GPU mode (will fall back to CPU if GPU not available)
+./scripts/docker_segment.sh input.nii.gz output.nii.gz gpu
 ```
 
 Example:

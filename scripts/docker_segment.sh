@@ -1,6 +1,26 @@
 #!/bin/bash
 set -e  # Exit on error
 
+# Function to check if system has NVIDIA GPU support
+check_gpu_support() {
+    # Check if running on macOS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        return 1
+    fi
+    
+    # Check for nvidia-smi
+    if ! command -v nvidia-smi &> /dev/null; then
+        return 1
+    fi
+    
+    # Check for NVIDIA runtime in Docker
+    if ! docker info 2>/dev/null | grep -q "NVIDIA"; then
+        return 1
+    fi
+    
+    return 0
+}
+
 # Check if correct number of arguments provided
 if [ "$#" -lt 2 ]; then
     echo "Usage: $0 input_file output_file [gpu|cpu]"
@@ -55,23 +75,32 @@ echo "Output directory: $OUTPUT_DIR"
 export INPUT_DIR=$INPUT_DIR
 export OUTPUT_DIR=$OUTPUT_DIR
 
-# Get device setting
-DEVICE=${3:-gpu}  # Default to GPU if not specified
+# Determine if GPU is available and requested
+DEVICE=${3:-auto}  # Default to auto-detect
+if [ "$DEVICE" = "auto" ]; then
+    if check_gpu_support; then
+        DEVICE="gpu"
+    else
+        DEVICE="cpu"
+        echo "GPU support not detected, using CPU mode"
+    fi
+fi
 
-# Check Docker and nvidia-docker installation if GPU is requested
+# Run docker-compose with appropriate configuration
 if [ "$DEVICE" = "gpu" ]; then
-    if ! command -v nvidia-smi &> /dev/null; then
-        echo "Warning: NVIDIA drivers not found. Falling back to CPU."
+    if ! check_gpu_support; then
+        echo "Error: GPU mode requested but GPU support not available"
+        echo "Falling back to CPU mode"
         DEVICE="cpu"
     fi
 fi
 
-# Run docker-compose with appropriate device setting
+# Run the appropriate service
 if [ "$DEVICE" = "cpu" ]; then
-    CUDA_VISIBLE_DEVICES=-1 docker compose run --rm lesion_segmentor \
+    docker compose --profile cpu run --rm lesion_segmentor \
         /data/input/$INPUT_FILENAME /data/output/$OUTPUT_FILENAME --device cpu
 else
-    docker compose run --rm lesion_segmentor \
+    docker compose --profile gpu run --rm lesion_segmentor_gpu \
         /data/input/$INPUT_FILENAME /data/output/$OUTPUT_FILENAME
 fi
 
