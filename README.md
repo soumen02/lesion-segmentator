@@ -39,6 +39,8 @@ chmod +x scripts/docker_segment.sh
 docker compose build
 ```
 
++ For detailed installation instructions, see [INSTALL.md](INSTALL.md)
+
 ## Usage
 
 ### Basic Usage

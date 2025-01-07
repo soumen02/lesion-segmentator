@@ -1,7 +1,10 @@
 name: lesion-segmentor
 services:
   lesion_segmentor:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lesion_segmentor:latest
     volumes:
       - ${INPUT_DIR:-/tmp}:/data/input
       - ${OUTPUT_DIR:-/tmp}:/data/output
@@ -10,6 +13,7 @@ services:
 
   lesion_segmentor_gpu:
     extends: lesion_segmentor
+    image: lesion_segmentor:latest-gpu
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
     deploy:
