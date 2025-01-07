@@ -1,0 +1,17 @@
+name: lesion-segmentor
+services:
+  lesion_segmentor:
+    build: .
+    volumes:
+      - ${INPUT_DIR:-/tmp}:/data/input
+      - ${OUTPUT_DIR:-/tmp}:/data/output
+      - ${MODEL_DIR:-~/.lesion_segmentor}:/root/.lesion_segmentor
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu] 
