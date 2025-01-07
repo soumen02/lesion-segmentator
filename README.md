@@ -145,3 +145,13 @@ docker compose build --no-cache
 
 If you use this tool in your research, please cite:
 [Citation Information] 
+
+### Mac-Specific Issues
+```bash
+# If you get "realpath: no such file or directory" error:
+# Make sure the parent directory of your output file exists:
+mkdir -p "$(dirname /path/to/output/mask.nii.gz)"
+
+# Then run the script:
+./scripts/docker_segment.sh input.nii.gz output.nii.gz
+``` 

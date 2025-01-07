@@ -16,8 +16,22 @@ if [ ! -f "$1" ]; then
     exit 1
 fi
 
-# Create full output directory path
-OUTPUT_DIR=$(dirname "$2")
+# Get absolute paths (Mac-compatible version)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # On Mac, use directory realpath and then append filename
+    INPUT_DIR=$(cd "$(dirname "$1")" && pwd)
+    INPUT_FILE="${INPUT_DIR}/$(basename "$1")"
+    OUTPUT_DIR=$(mkdir -p "$(dirname "$2")" && cd "$(dirname "$2")" && pwd)
+    OUTPUT_FILE="${OUTPUT_DIR}/$(basename "$2")"
+else
+    # On Linux, use realpath directly
+    INPUT_FILE=$(realpath "$1")
+    OUTPUT_FILE=$(realpath "$2")
+    INPUT_DIR=$(dirname "$INPUT_FILE")
+    OUTPUT_DIR=$(dirname "$OUTPUT_FILE")
+fi
+
+# Create output directory
 echo "Creating output directory: $OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
@@ -28,14 +42,6 @@ if [ ! -w "$OUTPUT_DIR" ]; then
     exit 1
 fi
 
-# Get absolute paths
-INPUT_FILE=$(realpath "$1")
-OUTPUT_FILE=$(realpath "$2")
-DEVICE=${3:-gpu}  # Default to GPU if not specified
-
-# Get directories
-INPUT_DIR=$(dirname "$INPUT_FILE")
-OUTPUT_DIR=$(dirname "$OUTPUT_FILE")
 INPUT_FILENAME=$(basename "$INPUT_FILE")
 OUTPUT_FILENAME=$(basename "$OUTPUT_FILE")
 
@@ -48,6 +54,9 @@ echo "Output directory: $OUTPUT_DIR"
 # Export for docker-compose
 export INPUT_DIR=$INPUT_DIR
 export OUTPUT_DIR=$OUTPUT_DIR
+
+# Get device setting
+DEVICE=${3:-gpu}  # Default to GPU if not specified
 
 # Check Docker and nvidia-docker installation if GPU is requested
 if [ "$DEVICE" = "gpu" ]; then
