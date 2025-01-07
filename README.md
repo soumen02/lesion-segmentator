@@ -36,7 +36,14 @@ chmod +x scripts/docker_segment.sh
 
 3. Build the Docker image:
 ```bash
-docker compose build
+# Build for CPU
+docker compose --profile cpu build
+
+# Build for GPU (Linux only)
+docker compose --profile gpu build
+
+# Or build both
+docker compose --profile cpu --profile gpu build
 ```
 
 + For detailed installation instructions, see [INSTALL.md](INSTALL.md)
