@@ -35,6 +35,7 @@ if current_dir not in sys.path:
 
 from model import get_network
 from utils import Restored
+from download import download_model, MODEL_FILENAME
 
 class LesionSegmentor:
     """
@@ -49,7 +50,7 @@ class LesionSegmentor:
     
     def __init__(
         self, 
-        model_path: Union[str, Path], 
+        model_path: Optional[Union[str, Path]] = None,
         device: Optional[torch.device] = None,
         roi_size: Tuple[int, int, int] = (120, 120, 120),
         target_spacing: Tuple[float, float, float] = (0.7, 0.7, 0.7)
@@ -58,7 +59,7 @@ class LesionSegmentor:
         Initialize the LesionSegmentor.
         
         Args:
-            model_path: Path to the pre-trained model weights.
+            model_path: Path to the pre-trained model weights. If None, will download or use default.
             device: Device to run inference on. If None, will use CUDA if available.
             roi_size: Region of interest size for sliding window inference.
             target_spacing: Target voxel spacing for image resampling.
@@ -69,6 +70,15 @@ class LesionSegmentor:
         else:
             self.device = device
         logger.info(f"Using device: {self.device}")
+        
+        # Get model path
+        if model_path is None:
+            model_path = download_model()
+        else:
+            model_path = Path(model_path)
+            if not model_path.exists():
+                logger.warning(f"Model not found at {model_path}, downloading default model...")
+                model_path = download_model()
             
         # Load model
         try:

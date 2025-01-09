@@ -13,10 +13,14 @@ RUN pip install --no-cache-dir \
     monai>=1.2.0 \
     nibabel>=4.0.0 \
     numpy>=1.21.0 \
-    scikit-image>=0.19.0
+    scikit-image>=0.19.0 \
+    gdown>=4.7.1
 
 # Copy Python files
-COPY inference.py model.py utils.py /app/
+COPY inference.py model.py utils.py download.py /app/
+
+# Download model
+RUN python -c "from download import download_model; download_model()"
 
 # Set environment variables
 ENV PYTHONPATH=/app
