@@ -59,6 +59,26 @@ def ensure_docker_files():
                 logger.error(f"Missing required file: {filename}")
                 sys.exit(1)
     
+    # Copy Python files
+    python_files = ['inference.py', 'model.py', 'utils.py']
+    for filename in python_files:
+        src = package_root / filename
+        dst = config_dir / filename
+        logger.info(f"Checking Python file {filename}:")
+        logger.info(f"  Source: {src} (exists: {src.exists()})")
+        logger.info(f"  Destination: {dst} (exists: {dst.exists()})")
+        
+        if not dst.exists() or not files_are_identical(src, dst):
+            if src.exists():
+                shutil.copy2(src, dst)
+                logger.info(f"  Copied {filename}")
+            else:
+                logger.error(f"Missing required Python file: {filename}")
+                logger.error(f"Package root contents:")
+                for item in package_root.iterdir():
+                    logger.error(f"  {item}")
+                sys.exit(1)
+    
     # Copy script file
     scripts_dir = config_dir / 'scripts'
     scripts_dir.mkdir(exist_ok=True)
