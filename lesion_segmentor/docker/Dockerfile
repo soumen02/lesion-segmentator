@@ -15,13 +15,12 @@ RUN pip install --no-cache-dir \
     numpy>=1.21.0 \
     scikit-image>=0.19.0
 
-# Copy inference script
-COPY inference.py /app/
-COPY model.py /app/
-COPY utils.py /app/
+# Copy Python files
+COPY inference.py model.py utils.py /app/
 
 # Set environment variables
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
 # Entry point
-ENTRYPOINT ["python", "inference.py"] 
+ENTRYPOINT ["python", "-u", "inference.py"] 

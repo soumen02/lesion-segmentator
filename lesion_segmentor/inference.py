@@ -1,26 +1,30 @@
-import torch
+import os
+import sys
+import argparse
+import logging
 import nibabel as nib
 import numpy as np
-import logging
-from pathlib import Path
+import torch
+from monai.inferers import sliding_window_inference
 from monai.transforms import (
     Compose,
     LoadImaged,
     EnsureChannelFirstd,
-    Orientationd,
-    Spacingd,
-    EnsureTyped,
+    ScaleIntensityRanged,
     NormalizeIntensityd,
     GaussianSmoothd,
-    ScaleIntensityd,
+    EnsureTyped,
     Activationsd,
     AsDiscreted,
 )
-from monai.data import MetaTensor
-from monai.inferers import SlidingWindowInferer
-from typing import Union, Optional
-from .model import get_network
-from .utils import Restored
+
+# Add the current directory to the path so we can import our modules
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
+from model import get_network
+from utils import Restored
 
 # Configure logging
 logger = logging.getLogger(__name__)
