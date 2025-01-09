@@ -23,6 +23,7 @@ setup(
     package_data={
         "lesion_segmentor": [
             "docker/*",
+            "docker/.*",
             "scripts/*",
         ],
     },
