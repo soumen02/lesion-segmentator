@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  lesion-segmentor-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${INPUT_PATH}:/app/input.nii.gz:ro
+      - ${OUTPUT_PATH}:/app/output.nii.gz
+    command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz"]
+    profiles: ["cpu"]
+
+  lesion-segmentor-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${INPUT_PATH}:/app/input.nii.gz:ro
+      - ${OUTPUT_PATH}:/app/output.nii.gz
+    command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    profiles: ["gpu"] 
