@@ -5,12 +5,15 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
-COPY requirements.txt /tmp/
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-
 # Create app directory
 WORKDIR /app
+
+# Install Python packages
+RUN pip install --no-cache-dir \
+    monai>=1.2.0 \
+    nibabel>=4.0.0 \
+    numpy>=1.21.0 \
+    scikit-image>=0.19.0
 
 # Copy necessary files
 COPY . /app/
