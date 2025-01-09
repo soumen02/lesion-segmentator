@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 MODEL_URL = "https://drive.google.com/uc?id=1-0t1ZOqz5qHxhXF8y_U4wFJ7tvy75ZSz"
 MODEL_FILENAME = "model.pth"
 
-def download_model(model_dir: Path = None) -> Path:
+def download_pretrained_weights(model_dir: Path = None) -> Path:
     """Download the pre-trained model if it doesn't exist."""
     if model_dir is None:
         model_dir = Path(__file__).parent

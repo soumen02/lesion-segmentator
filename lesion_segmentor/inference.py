@@ -35,7 +35,7 @@ if current_dir not in sys.path:
 
 from model import get_network
 from utils import Restored
-from download import download_model, MODEL_FILENAME
+from download import download_pretrained_weights, MODEL_FILENAME
 
 class LesionSegmentor:
     """
@@ -73,12 +73,12 @@ class LesionSegmentor:
         
         # Get model path
         if model_path is None:
-            model_path = download_model()
+            model_path = download_pretrained_weights()
         else:
             model_path = Path(model_path)
             if not model_path.exists():
                 logger.warning(f"Model not found at {model_path}, downloading default model...")
-                model_path = download_model()
+                model_path = download_pretrained_weights()
             
         # Load model
         try:

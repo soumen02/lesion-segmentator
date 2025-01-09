@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir \
 COPY inference.py model.py utils.py download.py /app/
 
 # Download model
-RUN python -c "from download import download_model; download_model()"
+RUN python -c "from download import download_pretrained_weights; download_pretrained_weights()"
 
 # Set environment variables
 ENV PYTHONPATH=/app
