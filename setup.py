@@ -24,7 +24,5 @@ setup(
         ],
     },
     description="A tool for automated lesion segmentation in FLAIR MRI scans",
-    author="Your Name",
-    author_email="your.email@example.com",
-    url="https://github.com/yourusername/lesion_segmentor",
+    url="https://github.com/soumen02/lesion-segmentator",
 ) 

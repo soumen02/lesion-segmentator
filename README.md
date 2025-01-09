@@ -12,7 +12,7 @@ A containerized deep learning tool for automated lesion segmentation in FLAIR MR
 2. **Quick Install**:
    ```bash
    # Install the CLI tool
-   pip install git+https://github.com/yourusername/lesion_segmentor.git
+   pip install git+https://github.com/soumen02/lesion-segmentator.git
 
    # The tool will handle Docker setup automatically on first run
    ```
@@ -33,6 +33,10 @@ A containerized deep learning tool for automated lesion segmentation in FLAIR MR
 
 2. **Docker Direct Usage** (alternative):
    ```bash
+   # Clone repository
+   git clone https://github.com/soumen02/lesion-segmentator.git
+   cd lesion-segmentator
+
    # Build Docker image (CPU version)
    docker compose --profile cpu build
 
