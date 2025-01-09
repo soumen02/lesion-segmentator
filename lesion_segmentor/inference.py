@@ -2,14 +2,20 @@ import os
 import sys
 import argparse
 import logging
+from pathlib import Path
+from typing import Union, Optional, Tuple
+
 import nibabel as nib
 import numpy as np
 import torch
-from monai.inferers import sliding_window_inference
+from monai.data import MetaTensor
+from monai.inferers import sliding_window_inference, SlidingWindowInferer
 from monai.transforms import (
     Compose,
     LoadImaged,
     EnsureChannelFirstd,
+    Orientationd,
+    Spacingd,
     ScaleIntensityRanged,
     NormalizeIntensityd,
     GaussianSmoothd,
@@ -44,8 +50,8 @@ class LesionSegmentor:
         self, 
         model_path: Union[str, Path], 
         device: Optional[torch.device] = None,
-        roi_size: tuple = (120, 120, 120),
-        target_spacing: tuple = (0.7, 0.7, 0.7)
+        roi_size: Tuple[int, int, int] = (120, 120, 120),
+        target_spacing: Tuple[float, float, float] = (0.7, 0.7, 0.7)
     ):
         """
         Initialize the LesionSegmentor.
@@ -86,7 +92,7 @@ class LesionSegmentor:
             Spacingd(keys="image", pixdim=self.target_spacing),
             NormalizeIntensityd(keys="image", nonzero=True),
             GaussianSmoothd(keys="image", sigma=0.4),
-            ScaleIntensityd(keys="image", minv=-1.0, maxv=1.0),
+            ScaleIntensityRanged(keys="image", a_min=0, a_max=255, b_min=-1.0, b_max=1.0),
         ])
         
         # Post-processing transforms
