@@ -6,8 +6,13 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - "${INPUT_PATH}:/app/input.nii.gz:ro"
-      - "${OUTPUT_PATH}:/app/output.nii.gz"
+      - type: bind
+        source: ${INPUT_PATH}
+        target: /app/input.nii.gz
+        read_only: true
+      - type: bind
+        source: ${OUTPUT_PATH}
+        target: /app/output.nii.gz
     command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz"]
     profiles: ["cpu"]
 
@@ -16,8 +21,13 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - "${INPUT_PATH}:/app/input.nii.gz:ro"
-      - "${OUTPUT_PATH}:/app/output.nii.gz"
+      - type: bind
+        source: ${INPUT_PATH}
+        target: /app/input.nii.gz
+        read_only: true
+      - type: bind
+        source: ${OUTPUT_PATH}
+        target: /app/output.nii.gz
     command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz"]
     deploy:
       resources:

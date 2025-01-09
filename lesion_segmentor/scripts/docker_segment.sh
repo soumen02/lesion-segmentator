@@ -6,14 +6,26 @@ if [ "$#" -lt 2 ]; then
     exit 1
 fi
 
-# Convert paths to absolute paths
-INPUT_PATH=$(realpath "$1")
-OUTPUT_PATH=$(realpath "$2")
+# Get absolute paths
+if command -v realpath >/dev/null 2>&1; then
+    INPUT_PATH=$(realpath "$1")
+    OUTPUT_PATH=$(realpath -m "$2")  # -m flag to not require output file to exist
+else
+    # Fallback for systems without realpath
+    INPUT_PATH="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+    OUTPUT_PATH="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
+fi
+
 PROFILE=${3:-gpu}  # Default to GPU if not specified
 
 # Export paths for docker-compose
 export INPUT_PATH
 export OUTPUT_PATH
+
+echo "Using paths:"
+echo "  Input: $INPUT_PATH"
+echo "  Output: $OUTPUT_PATH"
+echo "  Profile: $PROFILE"
 
 # Run docker-compose with the specified profile
 docker compose --profile "$PROFILE" up --build --remove-orphans
