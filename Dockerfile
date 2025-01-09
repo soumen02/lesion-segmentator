@@ -18,8 +18,7 @@ COPY . /app/
 RUN ls -la /app/
 
 # Install the package and dependencies
-RUN pip install --no-cache-dir -e . && \
-    pip install --no-cache-dir monailabel>=0.7.0
+RUN pip install --no-cache-dir -e .
 
 # Create directories
 RUN mkdir -p /root/.lesion_segmentor /data/input /data/output

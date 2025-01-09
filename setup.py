@@ -10,7 +10,6 @@ setup(
         "nibabel>=4.0.0",
         "numpy>=1.21.0",
         "gdown>=4.7.1",  # For Google Drive downloads
-        "monailabel>=0.7.0",
     ],
     entry_points={
         'console_scripts': [
