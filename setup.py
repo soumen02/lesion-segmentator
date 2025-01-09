@@ -1,20 +1,30 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="lesion_segmentor",
-    version="0.1.0",
-    packages=find_packages(include=['lesion_segmentor', 'lesion_segmentor.*', 'scripts']),
+    name="lesion-segmentor",
+    version="1.0.0",
+    packages=find_packages(),
     install_requires=[
-        "monai>=1.2.0",
-        "torch>=1.13.0",
         "nibabel>=4.0.0",
-        "numpy>=1.21.0",
-        "gdown>=4.7.1",  # For Google Drive downloads
     ],
     entry_points={
-        'console_scripts': [
-            'segment_lesions=scripts.segment_lesions:main',
+        "console_scripts": [
+            "lesion-segmentor=lesion_segmentor.cli:main",
         ],
     },
     python_requires=">=3.8",
+    include_package_data=True,
+    # Include the docker and script files in the package
+    package_data={
+        "lesion_segmentor": [
+            "scripts/*",
+            "Dockerfile",
+            "docker-compose.yml",
+            ".dockerignore",
+        ],
+    },
+    description="A tool for automated lesion segmentation in FLAIR MRI scans",
+    author="Your Name",
+    author_email="your.email@example.com",
+    url="https://github.com/yourusername/lesion_segmentor",
 ) 

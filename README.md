@@ -2,72 +2,76 @@
 
 A containerized deep learning tool for automated lesion segmentation in FLAIR MRI scans using a pre-trained SegResNet model.
 
-## Setup
+## Installation
 
 1. **Prerequisites**:
-   - Docker (>= 20.10.0)
+   - Python >= 3.8
+   - Docker >= 20.10.0
    - NVIDIA Container Toolkit (optional, for GPU support)
 
-2. **Installation**:
+2. **Quick Install**:
    ```bash
-   # Clone repository
-   git clone <repository-url> lesion_segmentor
-   cd lesion_segmentor
+   # Install the CLI tool
+   pip install git+https://github.com/yourusername/lesion_segmentor.git
 
-   # Make script executable
-   chmod +x scripts/docker_segment.sh
-
-   # Build Docker image (CPU version)
-   docker compose --profile cpu build
-
-   # Or build GPU version (if you have NVIDIA GPU)
-   docker compose --profile gpu build
+   # The tool will handle Docker setup automatically on first run
    ```
 
 ## Usage
 
-1. **Basic Usage**:
+1. **Command Line Interface (Recommended)**:
    ```bash
-   ./scripts/docker_segment.sh <input_flair.nii.gz> <output_mask.nii.gz> [cpu|gpu]
+   # Basic usage
+   lesion-segmentor -i /path/to/flair.nii.gz -o /path/to/output.nii.gz
+
+   # Force CPU usage
+   lesion-segmentor -i input.nii.gz -o output.nii.gz --cpu
+
+   # Force docker image update
+   lesion-segmentor -i input.nii.gz -o output.nii.gz --update
    ```
 
-2. **Examples**:
+2. **Docker Direct Usage** (alternative):
    ```bash
-   # Using CPU
-   ./scripts/docker_segment.sh /path/to/flair.nii.gz /path/to/output.nii.gz cpu
+   # Build Docker image (CPU version)
+   docker compose --profile cpu build
 
-   # Using GPU (requires NVIDIA GPU and drivers)
-   ./scripts/docker_segment.sh /path/to/flair.nii.gz /path/to/output.nii.gz gpu
+   # Run segmentation
+   ./scripts/docker_segment.sh /path/to/flair.nii.gz /path/to/output.nii.gz
    ```
 
 3. **Environment Variables** (optional):
    ```bash
-   # Customize directories
+   # Customize directories for docker
    export INPUT_DIR=/path/to/input/directory   # Default: /tmp
    export OUTPUT_DIR=/path/to/output/directory # Default: /tmp
    export MODEL_DIR=/path/to/model/directory   # Default: ~/.lesion_segmentor
    ```
 
-4. **Important Notes**:
-   - Use absolute paths for input and output
-   - Ensure output directory exists and is writable
-   - Input must be a FLAIR MRI in NIfTI format (.nii.gz)
+## Important Notes
 
-## Model Information
-
-- Input: FLAIR MRI scan (.nii.gz)
-- Output: Binary mask (0: Background, 1: Lesion)
+- Input must be a FLAIR MRI in NIfTI format (.nii.gz)
+- Output will be a binary mask (0: Background, 1: Lesion)
+- The tool will automatically:
+  - Build/update Docker images as needed
+  - Use GPU if available, fallback to CPU if not
+  - Create output directories if they don't exist
 
 ## Troubleshooting
 
 1. **Common Issues**:
    ```bash
-   # If output directory doesn't exist
-   mkdir -p /path/to/output/directory
+   # If Docker is not running
+   sudo systemctl start docker
 
-   # If script isn't executable
-   chmod +x scripts/docker_segment.sh
+   # If you don't have Docker permissions
+   sudo usermod -aG docker $USER  # Then log out and back in
 
-   # If GPU isn't working, fall back to CPU
-   ./scripts/docker_segment.sh input.nii.gz output.nii.gz cpu
+   # If GPU isn't working
+   lesion-segmentor -i input.nii.gz -o output.nii.gz --cpu
+   ```
+
+2. **For Help**:
+   ```bash
+   lesion-segmentor --help
    ```
