@@ -9,16 +9,31 @@ if [ "$#" -lt 2 ]; then
     exit 1
 fi
 
-# Get absolute paths
-if command -v realpath >/dev/null 2>&1; then
-    INPUT_PATH=$(realpath "$1")
-    OUTPUT_PATH=$(realpath -m "$2")  # -m flag to not require output file to exist
-else
-    # Fallback for systems without realpath
-    INPUT_PATH="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
-    OUTPUT_PATH="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
-fi
+# Get absolute paths in a cross-platform way
+get_absolute_path() {
+    local path="$1"
+    # If path exists, use realpath/pwd
+    if [ -e "$path" ]; then
+        if command -v realpath >/dev/null 2>&1; then
+            realpath "$path"
+        else
+            echo "$(cd "$(dirname "$path")" && pwd)/$(basename "$path")"
+        fi
+    else
+        # For non-existent paths (like output file), construct the path
+        local dir=$(dirname "$path")
+        local base=$(basename "$path")
+        if [ -d "$dir" ]; then
+            echo "$(cd "$dir" && pwd)/$base"
+        else
+            mkdir -p "$dir"
+            echo "$(cd "$dir" && pwd)/$base"
+        fi
+    fi
+}
 
+INPUT_PATH=$(get_absolute_path "$1")
+OUTPUT_PATH=$(get_absolute_path "$2")
 PROFILE=${3:-gpu}  # Default to GPU if not specified
 
 # Get script directory and config directory
