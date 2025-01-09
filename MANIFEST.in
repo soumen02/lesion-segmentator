@@ -1,6 +1,7 @@
 include README.md
-include lesion_segmentor/docker/Dockerfile
-include lesion_segmentor/docker/docker-compose.yml
-include lesion_segmentor/docker/.dockerignore
-include lesion_segmentor/docker/.env
-include lesion_segmentor/scripts/docker_segment.sh 
+recursive-include lesion_segmentor/docker *
+recursive-include lesion_segmentor/docker .*
+recursive-include lesion_segmentor/scripts *
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store 

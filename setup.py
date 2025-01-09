@@ -20,18 +20,17 @@ setup(
     },
     python_requires=">=3.8",
     include_package_data=True,
-    package_data={
-        "lesion_segmentor": [
-            "docker/*",
-            "docker/.*",
-            "scripts/*",
-            "scripts/docker_segment.sh",
-            "docker/Dockerfile",
-            "docker/docker-compose.yml",
-            "docker/.dockerignore",
-            "docker/.env",
-        ],
-    },
+    data_files=[
+        ('lesion_segmentor/docker', [
+            'lesion_segmentor/docker/Dockerfile',
+            'lesion_segmentor/docker/docker-compose.yml',
+            'lesion_segmentor/docker/.dockerignore',
+            'lesion_segmentor/docker/.env'
+        ]),
+        ('lesion_segmentor/scripts', [
+            'lesion_segmentor/scripts/docker_segment.sh'
+        ]),
+    ],
     description="A tool for automated lesion segmentation in FLAIR MRI scans",
     long_description=long_description,
     long_description_content_type="text/markdown",

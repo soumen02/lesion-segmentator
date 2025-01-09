@@ -7,6 +7,7 @@ import shutil
 from pathlib import Path
 import logging
 import pkg_resources
+import appdirs
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
@@ -15,34 +16,70 @@ def get_package_root():
     """Get the root directory where package files are installed."""
     return Path(pkg_resources.resource_filename('lesion_segmentor', ''))
 
+def get_config_dir():
+    """Get the standard config directory for the application."""
+    config_dir = Path(appdirs.user_config_dir('lesion-segmentor', appauthor="soumen02"))
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir
+
+def files_are_identical(file1, file2):
+    """Check if two files are identical."""
+    if not (Path(file1).exists() and Path(file2).exists()):
+        return False
+    return Path(file1).read_bytes() == Path(file2).read_bytes()
+
 def ensure_docker_files():
-    """Ensure all necessary Docker files are in the current directory."""
+    """Ensure all necessary Docker files are in the standard config directory."""
     package_root = get_package_root()
-    current_dir = Path.cwd()
+    config_dir = get_config_dir()
     
-    # Files to copy
-    docker_files = ['Dockerfile', 'docker-compose.yml', '.dockerignore', '.env']
+    logger.info(f"Package root: {package_root}")
+    logger.info(f"Config directory: {config_dir}")
     
-    # Create temporary working directory if needed
-    work_dir = current_dir / '.lesion_segmentor'
-    work_dir.mkdir(exist_ok=True)
+    # Files to copy from docker directory
+    docker_files = {
+        'Dockerfile': package_root / 'docker' / 'Dockerfile',
+        'docker-compose.yml': package_root / 'docker' / 'docker-compose.yml',
+        '.dockerignore': package_root / 'docker' / '.dockerignore',
+        '.env': package_root / 'docker' / '.env'
+    }
     
-    # Copy files
-    for file in docker_files:
-        src = package_root.parent / file
-        if src.exists():
-            shutil.copy2(src, work_dir / file)
+    # Copy Docker files
+    for filename, src in docker_files.items():
+        dst = config_dir / filename
+        logger.info(f"Checking file {filename}:")
+        logger.info(f"  Source: {src} (exists: {src.exists()})")
+        logger.info(f"  Destination: {dst} (exists: {dst.exists()})")
+        
+        if not dst.exists() or not files_are_identical(src, dst):
+            if src.exists():
+                shutil.copy2(src, dst)
+                logger.info(f"  Copied {filename}")
+            else:
+                logger.error(f"Missing required file: {filename}")
+                sys.exit(1)
+    
+    # Copy script file
+    scripts_dir = config_dir / 'scripts'
+    scripts_dir.mkdir(exist_ok=True)
+    
+    src_script = package_root / 'scripts' / 'docker_segment.sh'
+    dst_script = scripts_dir / 'docker_segment.sh'
+    
+    logger.info(f"Checking script docker_segment.sh:")
+    logger.info(f"  Source: {src_script} (exists: {src_script.exists()})")
+    logger.info(f"  Destination: {dst_script} (exists: {dst_script.exists()})")
+    
+    if not dst_script.exists() or not files_are_identical(src_script, dst_script):
+        if src_script.exists():
+            shutil.copy2(src_script, dst_script)
+            dst_script.chmod(0o755)  # Make executable
+            logger.info("  Copied docker_segment.sh")
         else:
-            logger.error(f"Missing required file: {file}")
+            logger.error("Missing required script: docker_segment.sh")
             sys.exit(1)
     
-    # Copy scripts directory
-    scripts_dir = work_dir / 'scripts'
-    scripts_dir.mkdir(exist_ok=True)
-    shutil.copy2(package_root.parent / 'scripts' / 'docker_segment.sh', 
-                scripts_dir / 'docker_segment.sh')
-    
-    return work_dir
+    return config_dir
 
 def check_docker():
     """Check if docker is running and available."""
@@ -62,8 +99,7 @@ def check_nvidia_docker():
 
 def ensure_docker_image():
     """Ensure the docker image is built and up to date."""
-    # Get working directory with Docker files
-    work_dir = ensure_docker_files()
+    config_dir = ensure_docker_files()
     
     # Check if image exists
     result = subprocess.run(['docker', 'images', '-q', 'lesion_segmentor:latest'], 
@@ -72,18 +108,18 @@ def ensure_docker_image():
     if not result.stdout.strip():
         logger.info("Building Docker image (this may take a few minutes)...")
         subprocess.run(['docker', 'compose', '--profile', 'cpu', 'build'], 
-                      cwd=work_dir, check=True)
+                      cwd=config_dir, check=True)
         if check_nvidia_docker():
             subprocess.run(['docker', 'compose', '--profile', 'gpu', 'build'], 
-                         cwd=work_dir, check=True)
+                         cwd=config_dir, check=True)
     
-    return work_dir
+    return config_dir
 
 def run_segmentation(input_path: Path, output_path: Path, force_cpu: bool = False):
     """Run the segmentation using docker."""
-    # Ensure Docker image and get working directory
-    work_dir = ensure_docker_image()
-    docker_script = work_dir / 'scripts' / 'docker_segment.sh'
+    # Ensure Docker image and get config directory
+    config_dir = ensure_docker_image()
+    docker_script = config_dir / 'scripts' / 'docker_segment.sh'
     
     # Make script executable
     docker_script.chmod(0o755)
@@ -97,7 +133,7 @@ def run_segmentation(input_path: Path, output_path: Path, force_cpu: bool = Fals
         cmd.append('cpu')
     
     # Run segmentation
-    subprocess.run(cmd, cwd=work_dir, check=True)
+    subprocess.run(cmd, cwd=config_dir, check=True)
 
 def main():
     parser = argparse.ArgumentParser(description='Lesion Segmentation Tool')
@@ -105,7 +141,16 @@ def main():
     parser.add_argument('-o', '--output', type=str, required=True, help='Output mask path (.nii.gz)')
     parser.add_argument('--cpu', action='store_true', help='Force CPU usage')
     parser.add_argument('--update', action='store_true', help='Force update of docker image')
+    parser.add_argument('--clean', action='store_true', help='Clean up all configuration files')
     args = parser.parse_args()
+
+    # Handle cleanup request
+    if args.clean:
+        config_dir = get_config_dir()
+        if config_dir.exists():
+            shutil.rmtree(config_dir)
+            logger.info("Configuration files cleaned up successfully")
+        sys.exit(0)
 
     # Convert to Path objects
     input_path = Path(args.input)
