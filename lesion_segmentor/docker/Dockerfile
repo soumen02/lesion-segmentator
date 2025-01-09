@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
+FROM --platform=$TARGETPLATFORM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -15,8 +15,10 @@ RUN pip install --no-cache-dir \
     numpy>=1.21.0 \
     scikit-image>=0.19.0
 
-# Copy necessary files
-COPY . /app/
+# Copy inference script
+COPY inference.py /app/
+COPY model.py /app/
+COPY utils.py /app/
 
 # Set environment variables
 ENV PYTHONPATH=/app

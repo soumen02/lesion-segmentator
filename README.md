@@ -79,3 +79,32 @@ A containerized deep learning tool for automated lesion segmentation in FLAIR MR
    ```bash
    lesion-segmentor --help
    ```
+
+## Cleanup
+
+If you need to clean up the installation or start fresh:
+
+1. Clean up configuration files:
+```bash
+lesion-segmentor --clean
+```
+
+2. Remove Docker images and containers:
+```bash
+# Remove the Docker containers
+docker rm -f $(docker ps -a -q --filter "name=lesion-segmentor")
+
+# Remove the Docker images
+docker rmi -f $(docker images -q lesion-segmentor*)
+```
+
+3. Uninstall the package:
+```bash
+pip uninstall lesion-segmentor
+```
+
+4. Clean up cache directory (optional):
+```bash
+rm -rf "/Users/$USER/Library/Application Support/lesion-segmentor"  # macOS
+rm -rf "$HOME/.local/share/lesion-segmentor"  # Linux
+```
