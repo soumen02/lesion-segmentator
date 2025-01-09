@@ -16,7 +16,7 @@ services:
       - type: bind
         source: ${OUTPUT_PATH}
         target: /app/output.nii.gz
-    command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz"]
+    command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz", "--device", "cpu"]
     profiles: ["cpu"]
 
   lesion-segmentor-gpu:
@@ -34,7 +34,7 @@ services:
       - type: bind
         source: ${OUTPUT_PATH}
         target: /app/output.nii.gz
-    command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz"]
+    command: ["--input", "/app/input.nii.gz", "--output", "/app/output.nii.gz", "--device", "cuda"]
     deploy:
       resources:
         reservations:

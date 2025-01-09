@@ -24,6 +24,10 @@ from monai.transforms import (
     AsDiscreted,
 )
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+logger = logging.getLogger(__name__)
+
 # Add the current directory to the path so we can import our modules
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
@@ -31,9 +35,6 @@ if current_dir not in sys.path:
 
 from model import get_network
 from utils import Restored
-
-# Configure logging
-logger = logging.getLogger(__name__)
 
 class LesionSegmentor:
     """
@@ -172,3 +173,32 @@ class LesionSegmentor:
         except Exception as e:
             logger.error(f"Segmentation failed: {str(e)}")
             raise
+
+def main():
+    parser = argparse.ArgumentParser(description='Lesion Segmentation Tool')
+    parser.add_argument('--input', '-i', type=str, required=True, help='Input FLAIR image path (.nii.gz)')
+    parser.add_argument('--output', '-o', type=str, required=True, help='Output mask path (.nii.gz)')
+    parser.add_argument('--model', type=str, default='/app/model.pth', help='Path to model weights')
+    parser.add_argument('--device', type=str, choices=['cuda', 'cpu'], default=None, help='Device to use')
+    args = parser.parse_args()
+
+    try:
+        # Initialize segmentor
+        device = torch.device(args.device) if args.device else None
+        segmentor = LesionSegmentor(args.model, device=device)
+        
+        # Run segmentation
+        logger.info(f"Processing {args.input}...")
+        result = segmentor(args.input)
+        
+        # Save output
+        logger.info(f"Saving output to {args.output}...")
+        nib.save(result, args.output)
+        logger.info("Done!")
+        
+    except Exception as e:
+        logger.error(f"Error: {str(e)}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

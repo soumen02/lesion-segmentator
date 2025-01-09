@@ -23,4 +23,5 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
 # Entry point
-ENTRYPOINT ["python", "-u", "inference.py"] 
+ENTRYPOINT ["python", "-u", "inference.py"]
+CMD ["--help"] 
