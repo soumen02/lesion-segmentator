@@ -30,6 +30,12 @@ setup(
         ('lesion_segmentor/scripts', [
             'lesion_segmentor/scripts/docker_segment.sh'
         ]),
+        ('lesion_segmentor', [
+            'lesion_segmentor/inference.py',
+            'lesion_segmentor/model.py',
+            'lesion_segmentor/utils.py',
+            'lesion_segmentor/download.py'
+        ])
     ],
     description="A tool for automated lesion segmentation in FLAIR MRI scans",
     long_description=long_description,

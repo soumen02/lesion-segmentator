@@ -60,7 +60,7 @@ def ensure_docker_files():
                 sys.exit(1)
     
     # Copy Python files
-    python_files = ['inference.py', 'model.py', 'utils.py']
+    python_files = ['inference.py', 'model.py', 'utils.py', 'download.py']
     for filename in python_files:
         src = package_root / filename
         dst = config_dir / filename

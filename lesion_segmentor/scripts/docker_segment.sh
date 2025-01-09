@@ -58,7 +58,7 @@ cp -v "$CONFIG_DIR/.dockerignore" "$BUILD_DIR"/ 2>/dev/null || true
 cp -v "$CONFIG_DIR/.env" "$BUILD_DIR"/ 2>/dev/null || true
 
 # Verify required files
-required_files=("Dockerfile" "docker-compose.yml" ".dockerignore" ".env" "inference.py" "model.py" "utils.py")
+required_files=("Dockerfile" "docker-compose.yml" ".dockerignore" ".env" "inference.py" "model.py" "utils.py" "download.py")
 missing_files=()
 
 echo "Checking required files in build directory:"
