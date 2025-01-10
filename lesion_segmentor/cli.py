@@ -33,9 +33,6 @@ def ensure_docker_files():
     package_root = get_package_root()
     config_dir = get_config_dir()
     
-    logger.info(f"Package root: {package_root}")
-    logger.info(f"Config directory: {config_dir}")
-    
     # Files to copy from docker directory
     docker_files = {
         'Dockerfile': package_root / 'docker' / 'Dockerfile',
@@ -44,57 +41,39 @@ def ensure_docker_files():
         '.env': package_root / 'docker' / '.env'
     }
     
-    # Copy Docker files
+    # Copy Docker files quietly
     for filename, src in docker_files.items():
         dst = config_dir / filename
-        logger.info(f"Checking file {filename}:")
-        logger.info(f"  Source: {src} (exists: {src.exists()})")
-        logger.info(f"  Destination: {dst} (exists: {dst.exists()})")
-        
         if not dst.exists() or not files_are_identical(src, dst):
             if src.exists():
                 shutil.copy2(src, dst)
-                logger.info(f"  Copied {filename}")
             else:
                 logger.error(f"Missing required file: {filename}")
                 sys.exit(1)
     
-    # Copy Python files
+    # Copy Python files quietly
     python_files = ['inference.py', 'model.py', 'utils.py', 'download.py']
     for filename in python_files:
         src = package_root / filename
         dst = config_dir / filename
-        logger.info(f"Checking Python file {filename}:")
-        logger.info(f"  Source: {src} (exists: {src.exists()})")
-        logger.info(f"  Destination: {dst} (exists: {dst.exists()})")
-        
         if not dst.exists() or not files_are_identical(src, dst):
             if src.exists():
                 shutil.copy2(src, dst)
-                logger.info(f"  Copied {filename}")
             else:
                 logger.error(f"Missing required Python file: {filename}")
-                logger.error(f"Package root contents:")
-                for item in package_root.iterdir():
-                    logger.error(f"  {item}")
                 sys.exit(1)
     
-    # Copy script file
+    # Copy script file quietly
     scripts_dir = config_dir / 'scripts'
     scripts_dir.mkdir(exist_ok=True)
     
     src_script = package_root / 'scripts' / 'docker_segment.sh'
     dst_script = scripts_dir / 'docker_segment.sh'
     
-    logger.info(f"Checking script docker_segment.sh:")
-    logger.info(f"  Source: {src_script} (exists: {src_script.exists()})")
-    logger.info(f"  Destination: {dst_script} (exists: {dst_script.exists()})")
-    
     if not dst_script.exists() or not files_are_identical(src_script, dst_script):
         if src_script.exists():
             shutil.copy2(src_script, dst_script)
             dst_script.chmod(0o755)  # Make executable
-            logger.info("  Copied docker_segment.sh")
         else:
             logger.error("Missing required script: docker_segment.sh")
             sys.exit(1)
