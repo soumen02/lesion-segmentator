@@ -36,6 +36,9 @@ INPUT_PATH=$(get_absolute_path "$1")
 OUTPUT_PATH=$(get_absolute_path "$2")
 PROFILE=${3:-gpu}  # Default to GPU if not specified
 
+# Create empty output file if it doesn't exist
+touch "$OUTPUT_PATH"
+
 # Get script directory and config directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CONFIG_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"

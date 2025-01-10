@@ -1,0 +1,2 @@
+[console_scripts]
+lesion-segmentor = lesion_segmentor.cli:main

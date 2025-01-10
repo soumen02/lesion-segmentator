@@ -12,6 +12,7 @@ setup(
     install_requires=[
         "nibabel>=4.0.0",
         "appdirs>=1.4.4",
+        "gdown>=4.7.1",
     ],
     entry_points={
         "console_scripts": [
