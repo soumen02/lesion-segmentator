@@ -6,11 +6,10 @@ services:
       dockerfile: Dockerfile
     image: lesion_segmentor:latest
     volumes:
-      - "${INPUT_DIR}:/data/input"
-      - "${OUTPUT_DIR}:/data/output"
-      - "${MODEL_DIR:-~/.lesion_segmentor}:/root/.lesion_segmentor"
-      - /Volumes:/Volumes
-    command: ["-i", "/data/input/${INPUT_FILE}", "-o", "/data/output/${OUTPUT_FILE}", "--verbose"]
+      - "${INPUT_DIR:?}:/data/input"
+      - "${OUTPUT_DIR:?}:/data/output"
+      - "${MODEL_DIR:-$HOME/.lesion_segmentor}:/root/.lesion_segmentor"
+    command: ["-i", "/data/input/${INPUT_FILE:?}", "-o", "/data/output/${OUTPUT_FILE:?}", "--verbose"]
     tty: true
     stdin_open: true
     deploy:

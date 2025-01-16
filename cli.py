@@ -94,63 +94,55 @@ def ensure_docker_image():
 def run_docker_segmentation(input_path, output_path, use_gpu=False, update=False):
     """Run segmentation using Docker."""
     try:
-        # Convert to absolute paths and handle macOS /Volumes paths
+        # Convert to absolute paths
         input_path = os.path.abspath(input_path)
         output_path = os.path.abspath(output_path)
         
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Handle macOS /Volumes paths
-        if input_path.startswith('/Volumes/'):
-            # For macOS, we need to map /Volumes to /Volumes inside Docker
-            input_dir = os.path.dirname(input_path)
-            input_file = os.path.basename(input_path)
-        else:
-            input_dir = os.path.dirname(input_path)
-            input_file = os.path.basename(input_path)
-            
-        if output_path.startswith('/Volumes/'):
-            output_dir = os.path.dirname(output_path)
-            output_file = os.path.basename(output_path)
-        else:
-            output_dir = os.path.dirname(output_path)
-            output_file = os.path.basename(output_path)
-
-        # Set environment variables for docker-compose
-        os.environ['INPUT_DIR'] = input_dir
-        os.environ['OUTPUT_DIR'] = output_dir
-        os.environ['INPUT_FILE'] = input_file
-        os.environ['OUTPUT_FILE'] = output_file
+        # Set up environment variables
+        env = os.environ.copy()
+        
+        # Handle input path
+        input_dir = os.path.dirname(input_path)
+        input_file = os.path.basename(input_path)
+        env['INPUT_DIR'] = input_dir
+        env['INPUT_FILE'] = input_file
+        
+        # Handle output path
+        output_dir = os.path.dirname(output_path)
+        output_file = os.path.basename(output_path)
+        env['OUTPUT_DIR'] = output_dir
+        env['OUTPUT_FILE'] = output_file
         
         # Print paths for debugging
         print(f"Input directory: {input_dir}")
         print(f"Input file: {input_file}")
         print(f"Output directory: {output_dir}")
         print(f"Output file: {output_file}")
-
-        # Get the package directory where docker files are stored
-        package_dir = os.path.dirname(os.path.abspath(__file__))
         
-        # Change to the package directory where docker-compose.yml is located
-        os.chdir(package_dir)
+        # Get the config directory where docker files are stored
+        config_dir = ensure_docker_files()
         
         if update:
             print("\nForcing Docker image rebuild...")
-            subprocess.run(['docker', 'compose', 'down', '--rmi', 'all'], check=True)
-
+            subprocess.run(['docker', 'compose', 'down', '--rmi', 'all'], 
+                         env=env, cwd=config_dir, check=True)
+        
         print("\nBuilding Docker image (this may take a few minutes)...")
-        subprocess.run(['docker', 'compose', '--profile', 'cpu', 'build'], check=True)
-
+        subprocess.run(['docker', 'compose', '--profile', 'cpu', 'build'], 
+                      env=env, cwd=config_dir, check=True)
+        
         print("\nRunning segmentation...")
         profile = 'gpu' if use_gpu else 'cpu'
         subprocess.run([
             'docker', 'compose', '--profile', profile, 'run', '-it',
             'lesion_segmentor' if profile == 'cpu' else 'lesion_segmentor_gpu'
-        ], check=True)
-
+        ], env=env, cwd=config_dir, check=True)
+        
         print(f"\nSegmentation complete! Output saved to: {output_path}")
-
+        
     except subprocess.CalledProcessError as e:
         print(f"\nSegmentation failed: {str(e)}")
         sys.exit(1)
