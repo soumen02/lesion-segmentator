@@ -24,6 +24,8 @@ from monai.transforms import (
     AsDiscreted,
 )
 import monai.config
+import gc
+import psutil
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -121,24 +123,40 @@ class LesionSegmentor:
             ),
         ])
         
-        # Dynamically set number of threads based on system
+        # Detect system type and adjust parameters
+        is_macos = sys.platform == "darwin"
         num_threads = os.cpu_count()
         if num_threads:
-            # Use 80% of available cores to avoid system slowdown
+            # Use 80% of available cores
             num_threads = max(1, int(num_threads * 0.8))
             logger.info(f"Using {num_threads} CPU threads")
-            torch.set_num_threads(num_threads)
+            
+        # Adjust batch size and ROI size based on system
+        if is_macos:
+            sw_batch_size = 1  # Smaller batch size for MacOS
+            overlap = 0.5  # Increased overlap for better results
+            logger.info("Running on MacOS with adjusted parameters")
+        else:
+            sw_batch_size = 4  # Larger batch size for Linux/Windows
+            overlap = 0.4
         
-        # Configure sliding window inferer with dynamic threads
+        # Configure sliding window inferer
         self.inferer = SlidingWindowInferer(
             roi_size=self.roi_size,
-            sw_batch_size=4,  # Increased batch size
-            overlap=0.4,
+            sw_batch_size=sw_batch_size,
+            overlap=overlap,
             mode="gaussian",
             padding_mode="replicate",
             device=self.device,
-            cpu_threads=num_threads  # Use detected number of threads
+            cpu_threads=num_threads,
+            progress=True  # Add progress bar
         )
+
+        # Enable memory efficient inference for MacOS
+        if is_macos:
+            torch.set_grad_enabled(False)
+            if hasattr(torch, 'set_float32_matmul_precision'):
+                torch.set_float32_matmul_precision('medium')
 
         # Enable MONAI's cache for transforms
         monai.config.set_compute_device(self.device)
@@ -170,35 +188,52 @@ class LesionSegmentor:
             original_orientation = nib.aff2axcodes(original_img.affine)
             logger.debug(f"Original image orientation: {original_orientation}")
             
-            # Prepare input
-            data = {"image": str(image_path)}
+            # Pre-processing with progress info
+            logger.info("Pre-processing image...")
+            data = self.pre_transforms({"image": str(image_path)})
             
-            # Pre-processing
-            data = self.pre_transforms(data)
-            logger.debug(f"Image shape after pre-processing: {data['image'].shape}")
+            # Get image shape for verification
+            image_shape = data["image"].shape
+            logger.info(f"Processed image shape: {image_shape}")
             
-            # Store the RAS affine matrix
-            if isinstance(data['image'], MetaTensor):
-                ras_affine = data['image'].affine
-                logger.debug(f"Orientation after pre-processing: {nib.aff2axcodes(ras_affine)}")
-            
-            # Run inference
+            # Run inference with progress info
+            logger.info("Running inference...")
             image = data["image"].unsqueeze(0)
+            
+            # Memory optimization for MacOS
+            if sys.platform == "darwin":
+                torch.cuda.empty_cache()
+                gc.collect()
+            
             outputs = self.inferer(image, self.model)
             
+            # Verify output shape
+            logger.info(f"Output shape: {outputs.shape}")
+            
             # Post-processing
+            logger.info("Post-processing...")
             data["pred"] = outputs[0]
             data = self.post_transforms(data)
             
-            # Create output NIFTI using the RAS affine
+            # Verify final prediction
             pred = data["pred"].cpu().numpy()
-            result_img = nib.Nifti1Image(pred.astype(np.uint8), ras_affine.cpu().numpy(), original_img.header)
+            logger.info(f"Final prediction shape: {pred.shape}")
+            logger.info(f"Prediction range: [{pred.min()}, {pred.max()}]")
+            logger.info(f"Non-zero voxels: {np.count_nonzero(pred)}")
             
-            logger.info("Segmentation completed successfully")
+            # Create output with verification
+            result_img = nib.Nifti1Image(
+                pred.astype(np.uint8), 
+                data["image"].affine.cpu().numpy(), 
+                original_img.header
+            )
+            
             return result_img
             
         except Exception as e:
             logger.error(f"Segmentation failed: {str(e)}")
+            logger.error(f"System: {sys.platform}")
+            logger.error(f"Available memory: {psutil.virtual_memory().available / (1024**3):.2f} GB")
             raise
 
 def main():

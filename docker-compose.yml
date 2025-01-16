@@ -17,11 +17,13 @@ services:
       resources:
         limits:
           cpus: '0.8'
-          memory: '80%'
+          memory: '12GB'
         reservations:
           cpus: '0.5'
-          memory: '50%'
+          memory: '8GB'
     profiles: ["cpu"]
+    environment:
+      - PYTORCH_ENABLE_MPS_FALLBACK=1
 
   lesion_segmentor_gpu:
     extends: lesion_segmentor
