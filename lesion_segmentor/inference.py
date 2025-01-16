@@ -23,6 +23,7 @@ from monai.transforms import (
     Activationsd,
     AsDiscreted,
 )
+import monai.config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -120,12 +121,28 @@ class LesionSegmentor:
             ),
         ])
         
-        # Sliding window inferer
+        # Dynamically set number of threads based on system
+        num_threads = os.cpu_count()
+        if num_threads:
+            # Use 80% of available cores to avoid system slowdown
+            num_threads = max(1, int(num_threads * 0.8))
+            logger.info(f"Using {num_threads} CPU threads")
+            torch.set_num_threads(num_threads)
+        
+        # Configure sliding window inferer with dynamic threads
         self.inferer = SlidingWindowInferer(
             roi_size=self.roi_size,
-            sw_batch_size=2,
+            sw_batch_size=4,  # Increased batch size
             overlap=0.4,
+            mode="gaussian",
+            padding_mode="replicate",
+            device=self.device,
+            cpu_threads=num_threads  # Use detected number of threads
         )
+
+        # Enable MONAI's cache for transforms
+        monai.config.set_compute_device(self.device)
+        monai.config.set_cache_dir("/tmp/monai_cache")
 
     @torch.no_grad()
     def __call__(self, image_path: Union[str, Path]) -> nib.Nifti1Image:
