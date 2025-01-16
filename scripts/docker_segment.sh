@@ -94,9 +94,9 @@ fi
 
 # Run the appropriate service
 if [ "$DEVICE" = "cpu" ]; then
-    docker compose --profile cpu run --rm lesion_segmentor
+    docker compose --profile cpu run -it lesion_segmentor
 else
-    docker compose --profile gpu run --rm lesion_segmentor_gpu
+    docker compose --profile gpu run -it lesion_segmentor_gpu
 fi
 
 # Clean up after running
