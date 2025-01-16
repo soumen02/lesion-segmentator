@@ -91,25 +91,72 @@ def ensure_docker_image():
     
     return config_dir
 
-def run_segmentation(input_path: Path, output_path: Path, force_cpu: bool = False):
-    """Run the segmentation using docker."""
-    # Ensure Docker image and get config directory
-    config_dir = ensure_docker_image()
-    docker_script = config_dir / 'scripts' / 'docker_segment.sh'
-    
-    # Make script executable
-    docker_script.chmod(0o755)
-    
-    # Prepare command
-    cmd = [str(docker_script), str(input_path.absolute()), str(output_path.absolute())]
-    if force_cpu:
-        cmd.append('cpu')
-    elif not check_nvidia_docker():
-        logger.info("No GPU detected, falling back to CPU...")
-        cmd.append('cpu')
-    
-    # Run segmentation
-    subprocess.run(cmd, cwd=config_dir, check=True)
+def run_docker_segmentation(input_path, output_path, use_gpu=False, update=False):
+    """Run segmentation using Docker."""
+    try:
+        # Convert to absolute paths and handle macOS /Volumes paths
+        input_path = os.path.abspath(input_path)
+        output_path = os.path.abspath(output_path)
+        
+        # Create output directory if it doesn't exist
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        # Handle macOS /Volumes paths
+        if input_path.startswith('/Volumes/'):
+            # For macOS, we need to map /Volumes to /Volumes inside Docker
+            input_dir = os.path.dirname(input_path)
+            input_file = os.path.basename(input_path)
+        else:
+            input_dir = os.path.dirname(input_path)
+            input_file = os.path.basename(input_path)
+            
+        if output_path.startswith('/Volumes/'):
+            output_dir = os.path.dirname(output_path)
+            output_file = os.path.basename(output_path)
+        else:
+            output_dir = os.path.dirname(output_path)
+            output_file = os.path.basename(output_path)
+
+        # Set environment variables for docker-compose
+        os.environ['INPUT_DIR'] = input_dir
+        os.environ['OUTPUT_DIR'] = output_dir
+        os.environ['INPUT_FILE'] = input_file
+        os.environ['OUTPUT_FILE'] = output_file
+        
+        # Print paths for debugging
+        print(f"Input directory: {input_dir}")
+        print(f"Input file: {input_file}")
+        print(f"Output directory: {output_dir}")
+        print(f"Output file: {output_file}")
+
+        # Get the package directory where docker files are stored
+        package_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Change to the package directory where docker-compose.yml is located
+        os.chdir(package_dir)
+        
+        if update:
+            print("\nForcing Docker image rebuild...")
+            subprocess.run(['docker', 'compose', 'down', '--rmi', 'all'], check=True)
+
+        print("\nBuilding Docker image (this may take a few minutes)...")
+        subprocess.run(['docker', 'compose', '--profile', 'cpu', 'build'], check=True)
+
+        print("\nRunning segmentation...")
+        profile = 'gpu' if use_gpu else 'cpu'
+        subprocess.run([
+            'docker', 'compose', '--profile', profile, 'run', '-it',
+            'lesion_segmentor' if profile == 'cpu' else 'lesion_segmentor_gpu'
+        ], check=True)
+
+        print(f"\nSegmentation complete! Output saved to: {output_path}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"\nSegmentation failed: {str(e)}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\nAn error occurred: {str(e)}")
+        sys.exit(1)
 
 def main():
     parser = argparse.ArgumentParser(description='Lesion Segmentation Tool')
@@ -151,7 +198,7 @@ def main():
     try:
         # Run segmentation
         logger.info("Starting segmentation...")
-        run_segmentation(input_path, output_path, args.cpu)
+        run_docker_segmentation(input_path, output_path, args.cpu, args.update)
         logger.info(f"Segmentation complete! Output saved to: {output_path}")
         
     except subprocess.CalledProcessError as e:

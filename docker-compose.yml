@@ -6,21 +6,20 @@ services:
       dockerfile: Dockerfile
     image: lesion_segmentor:latest
     volumes:
-      - ${INPUT_DIR:-/tmp}:/data/input
-      - ${OUTPUT_DIR:-/tmp}:/data/output
-      - ${MODEL_DIR:-~/.lesion_segmentor}:/root/.lesion_segmentor
-    command: ["-i", "/data/input/$(INPUT_FILE)", "-o", "/data/output/$(OUTPUT_FILE)", "--verbose"]
+      - "${INPUT_DIR}:/data/input"
+      - "${OUTPUT_DIR}:/data/output"
+      - "${MODEL_DIR:-~/.lesion_segmentor}:/root/.lesion_segmentor"
+      - /Volumes:/Volumes
+    command: ["-i", "/data/input/${INPUT_FILE}", "-o", "/data/output/${OUTPUT_FILE}", "--verbose"]
     tty: true
     stdin_open: true
     deploy:
       resources:
         limits:
-          # Use 80% of available CPUs and memory
-          cpus: '0.8'  # This means 80% of all available CPUs
+          cpus: '0.8'
           memory: '80%'
         reservations:
-          # Guarantee at least 50% of resources
-          cpus: '0.5'  # This means 50% of all available CPUs
+          cpus: '0.5'
           memory: '50%'
     profiles: ["cpu"]
 

@@ -116,3 +116,23 @@ pip uninstall lesion-segmentor
 rm -rf "/Users/$USER/Library/Application Support/lesion-segmentor"  # macOS
 rm -rf "$HOME/.local/share/lesion-segmentor"  # Linux
 ```
+
+
+## Uninstallation
+```
+# 1. Clean up configuration files
+lesion-segmentor --clean
+
+# 2. Remove Docker containers and images
+docker rm -f $(docker ps -a -q --filter "name=lesion-segmentor")
+docker rmi -f $(docker images -q lesion-segmentor*)
+
+# 3. Uninstall the Python package
+pip uninstall lesion-segmentor
+
+# 4. Clean up cache directories (for macOS)
+rm -rf "/Users/$USER/Library/Application Support/lesion-segmentor"
+rm -rf "$HOME/.local/share/lesion-segmentor"
+```
+
+
