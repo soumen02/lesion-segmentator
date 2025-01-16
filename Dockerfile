@@ -29,5 +29,5 @@ RUN echo "Final container structure:" && \
     echo "App directory:" && \
     ls -la /app/
 
-# Set the entrypoint to the segmentation script
-ENTRYPOINT ["segment_lesions"] 
+# Set the entrypoint to use the installed CLI
+ENTRYPOINT ["lesion-segmentor"] 

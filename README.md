@@ -10,12 +10,20 @@ A containerized deep learning tool for automated lesion segmentation in FLAIR MR
    - NVIDIA Container Toolkit (optional, for GPU support)
 
 2. **Quick Install**:
-   ```bash
-   # Install the CLI tool
+
+```bash
+   # Create a new conda environment (recommended)
+   conda create -n lesion_segmentor python=3.9
+   conda activate lesion_segmentor
+
+   # Install the package (will now install all dependencies)
    pip install git+https://github.com/soumen02/lesion-segmentator.git
 
+   # Run the tool
+   lesion-segmentor -i /path/to/flair.nii.gz -o /path/to/output.nii.gz
+
    # The tool will handle Docker setup automatically on first run
-   ```
+```
 
 ## Usage
 

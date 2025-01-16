@@ -9,6 +9,7 @@ services:
       - ${INPUT_DIR:-/tmp}:/data/input
       - ${OUTPUT_DIR:-/tmp}:/data/output
       - ${MODEL_DIR:-~/.lesion_segmentor}:/root/.lesion_segmentor
+    command: ["-i", "/data/input/$(INPUT_FILE)", "-o", "/data/output/$(OUTPUT_FILE)"]
     profiles: ["cpu"]  # Default profile
 
   lesion_segmentor_gpu:

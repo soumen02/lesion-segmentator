@@ -40,15 +40,15 @@ fi
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # On Mac, use directory realpath and then append filename
     INPUT_DIR=$(cd "$(dirname "$1")" && pwd)
-    INPUT_FILE="${INPUT_DIR}/$(basename "$1")"
+    INPUT_FILE="$(basename "$1")"
     OUTPUT_DIR=$(mkdir -p "$(dirname "$2")" && cd "$(dirname "$2")" && pwd)
-    OUTPUT_FILE="${OUTPUT_DIR}/$(basename "$2")"
+    OUTPUT_FILE="$(basename "$2")"
 else
     # On Linux, use realpath directly
-    INPUT_FILE=$(realpath "$1")
-    OUTPUT_FILE=$(realpath "$2")
-    INPUT_DIR=$(dirname "$INPUT_FILE")
-    OUTPUT_DIR=$(dirname "$OUTPUT_FILE")
+    INPUT_FILE=$(basename "$1")
+    OUTPUT_FILE=$(basename "$2")
+    INPUT_DIR=$(dirname "$(realpath "$1")")
+    OUTPUT_DIR=$(dirname "$(realpath "$2")")
 fi
 
 # Create output directory
@@ -62,18 +62,15 @@ if [ ! -w "$OUTPUT_DIR" ]; then
     exit 1
 fi
 
-INPUT_FILENAME=$(basename "$INPUT_FILE")
-OUTPUT_FILENAME=$(basename "$OUTPUT_FILE")
-
 # Print paths for debugging
-echo "Input path: $INPUT_FILE"
-echo "Output path: $OUTPUT_FILE"
-echo "Input directory: $INPUT_DIR"
-echo "Output directory: $OUTPUT_DIR"
+echo "Input path: $INPUT_DIR/$INPUT_FILE"
+echo "Output path: $OUTPUT_DIR/$OUTPUT_FILE"
 
 # Export for docker-compose
 export INPUT_DIR=$INPUT_DIR
 export OUTPUT_DIR=$OUTPUT_DIR
+export INPUT_FILE=$INPUT_FILE
+export OUTPUT_FILE=$OUTPUT_FILE
 
 # Determine if GPU is available and requested
 DEVICE=${3:-auto}  # Default to auto-detect
@@ -97,18 +94,16 @@ fi
 
 # Run the appropriate service
 if [ "$DEVICE" = "cpu" ]; then
-    docker compose --profile cpu run --rm lesion_segmentor \
-        /data/input/$INPUT_FILENAME /data/output/$OUTPUT_FILENAME --device cpu
+    docker compose --profile cpu run --rm lesion_segmentor
 else
-    docker compose --profile gpu run --rm lesion_segmentor_gpu \
-        /data/input/$INPUT_FILENAME /data/output/$OUTPUT_FILENAME
+    docker compose --profile gpu run --rm lesion_segmentor_gpu
 fi
 
 # Clean up after running
 docker compose down --remove-orphans > /dev/null 2>&1 || true
 
 # Check if output file was created
-if [ ! -f "$OUTPUT_FILE" ]; then
+if [ ! -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
     echo "Error: Output file was not created"
     echo "Please check:"
     echo "1. Docker container has write permissions to: $OUTPUT_DIR"
@@ -116,5 +111,5 @@ if [ ! -f "$OUTPUT_FILE" ]; then
     echo "3. The path exists inside the container at: /data/output/"
     exit 1
 else
-    echo "Successfully created: $OUTPUT_FILE"
+    echo "Successfully created: $OUTPUT_DIR/$OUTPUT_FILE"
 fi 

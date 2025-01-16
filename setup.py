@@ -10,7 +10,10 @@ setup(
     version="1.0.0",
     packages=find_packages(),
     install_requires=[
+        "torch>=1.13.0",
+        "monai>=1.2.0",
         "nibabel>=4.0.0",
+        "numpy>=1.21.0",
         "appdirs>=1.4.4",
         "gdown>=4.7.1",
     ],
